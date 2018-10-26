@@ -7,7 +7,7 @@ const config = require('./config');
 const bcrypt = require('bcrypt');
 
 const opts = {};
-opts.jwtFromRequest = ExtractJwt.fromHeader('jwt');
+opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = config.secretKey;
 
 exports.jwtPassport = passport.use(new JwtStrategy(opts, (jwt_payload, done) => {

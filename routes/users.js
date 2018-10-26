@@ -33,7 +33,7 @@ router.delete('/', (req, res, next) => {
   });
 });
 
-/* retrieve openid and session_key */
+/* Find or create the user */
 async function findOrCreateUser(we_res_openid, cb) {
   User.findOne({open_id: we_res_openid}, (err, user) => {
     if (err) throw err;
@@ -48,11 +48,12 @@ async function findOrCreateUser(we_res_openid, cb) {
       });
     }
     else if (user) {
-      cb(newUser);
+      cb(user);
     };
   });
 };
 
+/* retrieve openid and session_key */
 router.post('/code', (req, res, next) => {
   const url = "https://api.weixin.qq.com/sns/jscode2session?appid=" + config.appId +
     "&secret=" + config.appSecret + "&js_code=" + req.body.code + "&grant_type=authorization_code";
@@ -64,7 +65,7 @@ router.post('/code', (req, res, next) => {
         let token = authenticate.getToken({_id: user._id});
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
-        res.json({user, jwt: token});
+        res.json({userInfo: user['user_info'], points: user['points'], token: token});
       });
     });
   }).catch(err => console.log(err));
@@ -72,7 +73,7 @@ router.post('/code', (req, res, next) => {
 
 /* Register user information for account */
 router.post('/registerinfo', authenticate.verifyUser, (req, res, next) => {
-  User.findById(req.user._id)
+  User.findById(req.user._id).select('-open_id -admin')
   .then((user) => {
     if (user) {
       user.user_info = req.body.userInfo;
