@@ -1,7 +1,8 @@
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+const bcrypt = require('bcrypt');
 
-var UserSchema = new Schema({
+const UserSchema = new Schema({
   user_info: {
     avatarUrl: String,
     city: String,
@@ -26,6 +27,7 @@ var UserSchema = new Schema({
     default: 0
   }
 });
+
 
 
 module.exports = mongoose.model('User', UserSchema);

@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const User = require('../models/user');
 const router = express.Router();
 const authenticate = require('../authenticate');
+const bcrypt = require('bcrypt');
 const config = require('../config');
 
 router.use(bodyParser.json());
@@ -20,7 +21,7 @@ router.get('/', (req, res, next) => {
 
 /* DELETE Users */
 router.delete('/', (req, res, next) => {
-  User.findByIdAndDelete({ _id: req.body.target }, (err, user) => {
+  User.findByIdAndDelete({ _id: req.body.target },  (err, user) => {
     if (err) throw err;
     else if (!user) {
       res.statusCode = 401;
@@ -28,9 +29,9 @@ router.delete('/', (req, res, next) => {
     }
     else {
       res.statusCode = 200;
-      res.json({deleted: user});
+      res.json({success: true, msg: "Successfully deleted user: " + req.body.target});
     };
-  });
+  }).catch(err => console.log(err));
 });
 
 /* Find or create the user */
@@ -48,6 +49,7 @@ async function findOrCreateUser(we_res_openid, cb) {
       });
     }
     else if (user) {
+      console.log('user exists');
       cb(user);
     };
   });
@@ -62,26 +64,24 @@ router.post('/code', (req, res, next) => {
     we_res.text().then((we_res_text) => {
       const we_res_openid = JSON.parse(we_res_text)['openid'];
       findOrCreateUser(we_res_openid, (user) => {
-        let token = authenticate.getToken({_id: user._id});
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        res.json({userInfo: user['user_info'], points: user['points'], token: token});
-      });
+          let token = authenticate.getToken({ _id: user._id });
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.json({ userInfo: user['user_info'], points: user['points'], token: token });
+        });
     });
   }).catch(err => console.log(err));
 });
 
 /* Register user information for account */
-router.post('/registerinfo', authenticate.verifyUser, (req, res, next) => {
-  User.findById(req.user._id).select('-open_id -admin')
+router.put('/registerinfo', authenticate.verifyUser, (req, res, next) => {
+  User.findByIdAndUpdate(req.user._id, {user_info: req.body.userInfo}, 
+    { new: true }).select('-open_id -admin')
   .then((user) => {
     if (user) {
-      user.user_info = req.body.userInfo;
-      user.save((err, user) => {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        res.json(user);
-      });
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.json(user);
     }
     else {
       res.statusCode = 401;
