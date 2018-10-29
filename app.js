@@ -1,13 +1,15 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var bodyParser = require('body-parser');
-var logger = require('morgan');
-var config = require('./config');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const bodyParser = require('body-parser');
+const logger = require('morgan');
+const config = require('./config');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var session = require('express-session')(session);
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const restaurantRouter = require('./routes/restaurantRouter');
+const dishRouter = require('./routes/dishRouter');
+
 const mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 
@@ -36,6 +38,7 @@ app.use('/users', usersRouter);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/restaurants', restaurantRouter);
 
 
 // catch 404 and forward to error handler 
